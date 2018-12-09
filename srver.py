@@ -19,6 +19,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     else:
         s.connect((HOST,PORT))
         conn = s
+    print(PORT,conn)
     while not done:
         screen.fill((0,0,0))
         for event in pygame.event.get():
@@ -35,19 +36,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             x+=3
         pygame.draw.rect(screen,(0,255,0),pygame.Rect(x,y,40,40))
 
-        data = ''
-        data = conn.recv(1024)
-        
-        if not data:
-            break
         if isServer:
+            data = ''
+            data = conn.recv(1024)
             opponent=data.decode('utf-8')
             ox=int(opponent[:opponent.find(",")])
             oy=int(opponent[(opponent.find(",")+1):])
             pygame.draw.rect(screen,(0,0,255),pygame.Rect(ox,oy,40,40))
             conn.sendall(bytes(str(x)+","+str(y),'utf-8'))
-        else:
+        if not isServer:
             conn.sendall(bytes(str(x)+","+str(y),'utf-8'))
+            data = ''
+            data = conn.recv(1024)
             opponent=data.decode('utf-8')
             ox=int(opponent[:opponent.find(",")])
             oy=int(opponent[(opponent.find(",")+1):])
