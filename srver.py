@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import math
 import socket
 import pygame
 pygame.init()
@@ -10,6 +10,7 @@ x=0
 y=0
 done=False
 isServer = True
+bulletlist=[]
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     conn = 0
     if isServer:
@@ -25,6 +26,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
                 done=True
+            if event.type==pygame.MOUSEBUTTONDOWN:
+                
+                bulletlist.append((x,y,1,1))
+        for i in range(len(bulletlist)):
+            pygame.draw.rect(screen,(255,255,255),pygame.Rect(bulletlist[i][0],bulletlist[i][1],10,10))
+            bulletlist[i]=(bulletlist[i][0]+bulletlist[i][2],bulletlist[i][1]+bulletlist[i][3],1,1)
         pressed=pygame.key.get_pressed()
         if pressed[pygame.K_UP] and y>0:
             y-=3
