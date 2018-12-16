@@ -3,13 +3,16 @@ import math
 import socket
 import pygame
 pygame.init()
-HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
+isServer = True
+if isServer:
+    HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
+else:
+    HOST = '192.168.0.20'  # Standard loopback interface address (localhost)
 PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
 screen=pygame.display.set_mode((800,600))
 x=0
 y=0
 done=False
-isServer = True
 bulletlist=[]
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     conn = 0
@@ -47,6 +50,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             data = ''
             data = conn.recv(1024)
             opponent=data.decode('utf-8')
+            print(opponent)
             ox=int(opponent[:opponent.find(",")])
             oy=int(opponent[(opponent.find(",")+1):(opponent.find("-"))])
             pygame.draw.rect(screen,(0,0,255),pygame.Rect(ox,oy,40,40))
