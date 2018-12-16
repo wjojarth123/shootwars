@@ -2,6 +2,7 @@
 import math
 import socket
 import pygame
+import json
 pygame.init()
 isServer = True
 if isServer:
@@ -14,6 +15,18 @@ x=0
 y=0
 done=False
 bulletlist=[]
+def readData(opponent):
+    global bulletlist
+    ox=int(opponent[:opponent.find(",")])
+    oy=int(opponent[(opponent.find(",")+1):(opponent.find("-"))])
+    
+    ebl=opponent[(opponent.find("-")+1):]
+    ebl=json.loads(ebl)
+    for i in range(len(ebl)):
+       ebl[i]=tuple(ebl[i])
+       bulletlist.append(ebl[i])
+    print(ebl)
+    return (ox,oy)
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     conn = 0
     if isServer:
@@ -50,19 +63,19 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             data = ''
             data = conn.recv(1024)
             opponent=data.decode('utf-8')
-            print(opponent)
-            ox=int(opponent[:opponent.find(",")])
-            oy=int(opponent[(opponent.find(",")+1):(opponent.find("-"))])
-            pygame.draw.rect(screen,(0,0,255),pygame.Rect(ox,oy,40,40))
-            conn.sendall(bytes(str(x)+","+str(y)+"-"+str(bulletlist),'utf-8'))
-            print(opponent)
+            epos=readData(opponent)
+            
+            pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
+            conn.sendall(bytes(str(x)+","+str(y)+"-"+json.dumps(bulletlist),'utf-8'))
         if not isServer:
-            conn.sendall(bytes(str(x)+","+str(y)+"-"+str(bulletlist),'utf-8'))
+            bls = ''
+            for i in range(len(bulletlist)):
+                 
+
+            conn.sendall(bytes(str(x)+","+str(y)+"-"+json.dumps(bulletlist),'utf-8'))
             data = ''
             data = conn.recv(1024)
             opponent=data.decode('utf-8')
-            ox=int(opponent[:opponent.find(",")])
-            oy=int(opponent[(opponent.find(",")+1):(opponent.find("-"))])
-            pygame.draw.rect(screen,(0,0,255),pygame.Rect(ox,oy,40,40))
-            print(opponent)
+            epos=readData(opponent)
+            pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
         pygame.display.flip()
