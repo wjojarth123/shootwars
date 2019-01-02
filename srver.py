@@ -10,7 +10,7 @@ if isServer:
     HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
 else:
     HOST = '192.168.0.20'  # Standard loopback interface address (localhost)
-PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
+PORT = 65432        # Port to listen on (non-privied ports are > 1023)
 sx=800
 sy=600
 screen=pygame.display.set_mode((sx,sy))
@@ -21,6 +21,8 @@ bulletlist=[]
 ebulletlist=[]
 cooldown=1
 lasttime=time.time()
+health=5
+
 def readData(opponent):
     global ebulletlist
     ox=int(opponent[:opponent.find(",")])
@@ -73,13 +75,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             b = bulletlist[i]
             if b[0]>sx or b[0]<0 or b[1]>sy or b[1]<0:
                 btr.append(b)
-        
+            bulletrect=pygame.Rect(b[0],b[1],10,10)
+            if usrect.colliderect(bulletrect):
+                btr.append(bulletlist[i])
         for i in range(len(btr)):
             bulletlist.remove(btr[i])
-    
+        usrect=pygame.Rect(x,y,40,40)
+        ebtr=[]
         for i in range(len(ebulletlist)):
             pygame.draw.rect(screen,(255,255,255),pygame.Rect(ebulletlist[i][0],ebulletlist[i][1],10,10))
             ebulletlist[i]=(ebulletlist[i][0]+ebulletlist[i][2],ebulletlist[i][1]+ebulletlist[i][3],ebulletlist[i][2],ebulletlist[i][3])
+            bulletrect=pygame.Rect(ebulletlist[i][0],ebulletlist[i][1],10,10)
+            if usrect.colliderect(bulletrect):
+                health-=1
+        if health<=0:
+            done=True
         pressed=pygame.key.get_pressed()
         
         if pressed[pygame.K_UP] and y>0:
