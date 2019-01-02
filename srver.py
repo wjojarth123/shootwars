@@ -17,6 +17,8 @@ screen=pygame.display.set_mode((sx,sy))
 x=0
 y=0
 done=False
+pygame.font.init()
+myfont=pygame.font.SysFont('Comic Sans MS',24)
 bulletlist=[]
 ebulletlist=[]
 cooldown=1
@@ -123,5 +125,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             opponent=data.decode('utf-8')
             epos=readData(opponent)
             pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
-
+        textsurface=myfont.render('Health: '+str(health),False,(255,255,255))
+        screen.blit(textsurface,(5,5))
         pygame.display.flip()
