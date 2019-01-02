@@ -22,9 +22,12 @@ ebulletlist=[]
 cooldown=1
 lasttime=time.time()
 health=5
-
+ex=0
+ey=0
 def readData(opponent):
     global ebulletlist
+    global ex
+    global ey
     ox=int(opponent[:opponent.find(",")])
     oy=int(opponent[(opponent.find(",")+1):(opponent.find("-"))])
     ebulletlist=[]
@@ -33,7 +36,8 @@ def readData(opponent):
     for i in range(len(ebl)):
        ebl[i]=tuple(ebl[i])
        ebulletlist.append(ebl[i])
-    
+    ex=ox
+    ey=oy
     return (ox,oy)
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     conn = 0
@@ -68,6 +72,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 cooldown=1
                 hasShot=1
         btr=[]
+        nmerect=pygame.Rect(ex,ey,40,40)
         for i in range(len(bulletlist)):
             b = bulletlist[i]
             pygame.draw.rect(screen,(255,255,255),pygame.Rect(b[0],b[1],10,10))
@@ -76,7 +81,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if b[0]>sx or b[0]<0 or b[1]>sy or b[1]<0:
                 btr.append(b)
             bulletrect=pygame.Rect(b[0],b[1],10,10)
-            if usrect.colliderect(bulletrect):
+            if nmerect.colliderect(bulletrect):
                 btr.append(bulletlist[i])
         for i in range(len(btr)):
             bulletlist.remove(btr[i])
