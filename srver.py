@@ -121,8 +121,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 data = conn.recv(2048)
                 opponent=data.decode('utf-8')
                 epos=readData(opponent)
-                
-                pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
+                if not opponent=="death":
+                    pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
                 conn.sendall(bytes(str(x)+","+str(y)+"-"+json.dumps(bulletlist),'utf-8'))
             if not isServer:
                 bls = ''
@@ -131,29 +131,31 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 data = conn.recv(2048)
                 opponent=data.decode('utf-8')
                 epos=readData(opponent)
-                pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
+                if not opponent=="death":
+                    pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
             textsurface=myfont.render('Health: '+str(health),False,(255,255,255))
             screen.blit(textsurface,(5,5))
             pygame.display.flip()  
         pressed=pygame.key.get_pressed()
         print(pressed[pygame.K_SPACE])
-        if isServer:
-            data = conn.recv(2048)
-            opponent=data.decode('utf-8')
-            epos=readData(opponent)
-            conn.sendall(bytes("death"))
-        else:
-            conn.sendall(bytes("death"))
-            data = conn.recv(2048)
-            opponent=data.decode('utf-8')
-            epos=readData(opponent)
+        if done:
+            if isServer:
+                data = conn.recv(2048)
+                opponent=data.decode('utf-8')
+                epos=readData(opponent)
+                conn.sendall(bytes("death",'utf-8'))
+            else:
+                conn.sendall(bytes("death",'utf-8'))
+                data = conn.recv(2048)
+                opponent=data.decode('utf-8')
+                epos=readData(opponent)
 
-        if pressed[pygame.K_SPACE] and done:
-            
-            print("Casey")
-            done=False
-            heath=5
-            bulletlist=[]
-            ebulletlist=[]
-            x=0
-            y=0
+            if pressed[pygame.K_SPACE]:
+                
+                print("Casey")
+                done=False
+                heath=5
+                bulletlist=[]
+                ebulletlist=[]
+                x=0
+                y=0
