@@ -149,7 +149,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 data = conn.recv(2048)
                 opponent=data.decode('utf-8')
                 epos=readData(opponent)
-
+            for event in pygame.event.get():
+                if event.type==pygame.QUIT:
+                    done=True
             if pressed[pygame.K_SPACE]:
                 
                 print("Casey")
