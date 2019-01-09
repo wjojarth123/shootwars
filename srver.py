@@ -28,6 +28,10 @@ ex=0
 bs=10
 ey=0
 def readData(opponent):
+    global done
+    if opponent=="death":
+        done=True
+        return
     global ebulletlist
     global ex
     global ey
@@ -133,7 +137,19 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             pygame.display.flip()  
         pressed=pygame.key.get_pressed()
         print(pressed[pygame.K_SPACE])
+        if isServer:
+            data = conn.recv(2048)
+            opponent=data.decode('utf-8')
+            epos=readData(opponent)
+            conn.sendall(bytes("death"))
+        else:
+            conn.sendall(bytes("death"))
+            data = conn.recv(2048)
+            opponent=data.decode('utf-8')
+            epos=readData(opponent)
+
         if pressed[pygame.K_SPACE] and done:
+            
             print("Casey")
             done=False
             heath=5
