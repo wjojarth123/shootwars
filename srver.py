@@ -14,8 +14,12 @@ PORT = 65432        # Port to listen on (non-privied ports are > 1023)
 sx=800
 sy=600
 screen=pygame.display.set_mode((sx,sy))
-x=0
-y=0
+if isServer:
+    x=0
+    y=0
+else:
+    x=760
+    y=560
 done=False
 pygame.font.init()
 myfont=pygame.font.SysFont('Comic Sans MS',24)
@@ -136,13 +140,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             textsurface=myfont.render('Health: '+str(health),False,(255,255,255))
             screen.blit(textsurface,(5,5))
             pygame.display.flip()  
-        pressed=pygame.key.get_pressed()
-        print(pressed[pygame.K_SPACE])
+        
         if done:
+            pressed=pygame.key.get_pressed()
+            print(pressed[pygame.K_SPACE])
             if isServer:
                 data = conn.recv(2048)
                 opponent=data.decode('utf-8')
                 epos=readData(opponent)
+
                 conn.sendall(bytes("death",'utf-8'))
             else:
                 conn.sendall(bytes("death",'utf-8'))
@@ -156,8 +162,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 
                 print("Casey")
                 done=False
-                heath=5
+                health=5
                 bulletlist=[]
                 ebulletlist=[]
-                x=0
-                y=0
+                if isServer:
+                    x=0
+
+                    y=0
+                else:
+                    x=760
+                    y=560
+        print(done)
