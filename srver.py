@@ -1,15 +1,17 @@
-#!/usr/bin/env python3
+
+
+ #!/usr/bin/env python3
 import math
 import socket
 import time
 import pygame
 import json
 pygame.init()
-isServer = True
+isServer = False
 if isServer:
     HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
 else:
-    HOST = '192.168.0.20'  # Standard loopback interface address (localhost)
+    HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 65432        # Port to listen on (non-privied ports are > 1023)
 sx=800
 sy=600
@@ -21,6 +23,8 @@ else:
     x=760
     y=560
 done=False
+
+ammo=10
 pygame.font.init()
 myfont=pygame.font.SysFont('Comic Sans MS',24)
 bulletlist=[]
@@ -64,19 +68,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         if not done:
             hasShot=0
             currenttime=time.time()
-            cooldown-=(currenttime-lasttime)
+            timePassed=(currenttime-lasttime)
+            cooldown-=timePassed
             lasttime=currenttime
             
             screen.fill((0,0,0))
             for event in pygame.event.get():
                 if event.type==pygame.QUIT:
                     done=True
-                if event.type==pygame.MOUSEBUTTONDOWN and cooldown < 0 and hasShot==0:
+                if event.type==pygame.MOUSEBUTTONDOWN and cooldown < 0 and hasShot==0 and ammo>0:
                     mp=pygame.mouse.get_pos()
                     xd=mp[0]-x
                     yd=mp[1]-y
+                    ammo-=1
                     dist=math.sqrt((xd*xd)+(yd*yd))
-                    bs=8
+                    bs=(8*timePassed)
                     vy = yd/dist*bs
                     vx = xd/dist*bs
                     
@@ -107,17 +113,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     health-=1
             if health<=0:
                 done=True
-                print("The opponent shall die next")
+                
             pressed=pygame.key.get_pressed()
             
             if pressed[pygame.K_UP] and y>0:
-                y-=3
+                y-=3*timePassed
             if pressed[pygame.K_DOWN] and y<560:
-                y+=3
+                y+=3*timePassed
             if pressed[pygame.K_LEFT] and x>0:
-                x-=3
+                x-=3*timePassed
             if pressed[pygame.K_RIGHT] and x<760:
-                x+=3
+                x+=3*timePassed
             pygame.draw.rect(screen,(0,255,0),pygame.Rect(x,y,40,40))
 
             if isServer:
@@ -127,10 +133,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 epos=readData(opponent)
                 if not opponent=="death":
                     pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
-                conn.sendall(bytes(str(x)+","+str(y)+"-"+json.dumps(bulletlist),'utf-8'))
+                conn.sendall(bytes(str(int(x))+","+str(int(y))+"-"+json.dumps(bulletlist),'utf-8'))
             if not isServer:
                 bls = ''
-                conn.sendall(bytes(str(x)+","+str(y)+"-"+json.dumps(bulletlist),'utf-8'))
+                conn.sendall(bytes(str(int(x))+","+str(int(y))+"-"+json.dumps(bulletlist),'utf-8'))
                 data = ''
                 data = conn.recv(2048)
                 opponent=data.decode('utf-8')
@@ -139,20 +145,22 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
             textsurface=myfont.render('Health: '+str(health),False,(255,255,255))
             screen.blit(textsurface,(5,5))
+            textsurface=myfont.render('Ammo!!: '+str(ammo),False,(255,255,255))
+            screen.blit(textsurface,(5,25))
             pygame.display.flip()  
         
         if done:
             pressed=pygame.key.get_pressed()
-            print(pressed[pygame.K_SPACE])
+            
             if isServer:
-                data = conn.recv(2048)
+                data = conn.recv(1024)
                 opponent=data.decode('utf-8')
                 epos=readData(opponent)
 
                 conn.sendall(bytes("death",'utf-8'))
             else:
                 conn.sendall(bytes("death",'utf-8'))
-                data = conn.recv(2048)
+                data = conn.recv(1024)
                 opponent=data.decode('utf-8')
                 epos=readData(opponent)
             for event in pygame.event.get():
@@ -160,7 +168,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     done=True
             if pressed[pygame.K_SPACE]:
                 
-                print("Casey")
+                
                 done=False
                 health=5
                 bulletlist=[]
@@ -172,4 +180,4 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 else:
                     x=760
                     y=560
-        print(done)
+        print("great")
