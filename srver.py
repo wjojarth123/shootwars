@@ -11,7 +11,7 @@ isServer = False
 if isServer:
     HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
 else:
-    HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
+    HOST = '192.168.0.28'  # Standard loopback interface address (localhost)
 PORT = 65432        # Port to listen on (non-privied ports are > 1023)
 sx=800
 sy=600
@@ -23,15 +23,15 @@ else:
     x=760
     y=560
 done=False
-
-ammo=10
+playerSpeed=15
+ammo=100
 pygame.font.init()
 myfont=pygame.font.SysFont('Comic Sans MS',24)
 bulletlist=[]
 ebulletlist=[]
 cooldown=1
 lasttime=time.time()
-health=5
+health=100
 ex=0
 bs=10
 ey=0
@@ -82,7 +82,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     yd=mp[1]-y
                     ammo-=1
                     dist=math.sqrt((xd*xd)+(yd*yd))
-                    bs=(8*timePassed)
+                    bs=(100*timePassed)
                     vy = yd/dist*bs
                     vx = xd/dist*bs
                     
@@ -110,35 +110,43 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 ebulletlist[i]=(ebulletlist[i][0]+ebulletlist[i][2],ebulletlist[i][1]+ebulletlist[i][3],ebulletlist[i][2],ebulletlist[i][3])
                 bulletrect=pygame.Rect(ebulletlist[i][0],ebulletlist[i][1],10,10)
                 if usrect.colliderect(bulletrect):
-                    health-=1
+                    health-=0.1
             if health<=0:
                 done=True
                 
             pressed=pygame.key.get_pressed()
             
             if pressed[pygame.K_UP] and y>0:
-                y-=3*timePassed
+                y-=playerSpeed*timePassed
             if pressed[pygame.K_DOWN] and y<560:
-                y+=3*timePassed
+                y+=playerSpeed*timePassed
             if pressed[pygame.K_LEFT] and x>0:
-                x-=3*timePassed
+                x-=playerSpeed*timePassed
             if pressed[pygame.K_RIGHT] and x<760:
-                x+=3*timePassed
+                x+=playerSpeed*timePassed
             pygame.draw.rect(screen,(0,255,0),pygame.Rect(x,y,40,40))
 
             if isServer:
                 data = ''
-                data = conn.recv(2048)
+                data = conn.recv(10)
+                bytesnext=int(data.decode('utf-8'))
+                data = ''
+                data = conn.recv(bytesnext)
                 opponent=data.decode('utf-8')
                 epos=readData(opponent)
+                thatstuff=bytes(str(int(x))+","+str(int(y))+"-"+json.dumps(bulletlist),'utf-8')
                 if not opponent=="death":
                     pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
-                conn.sendall(bytes(str(int(x))+","+str(int(y))+"-"+json.dumps(bulletlist),'utf-8'))
+
+                conn.sendall(len(thatstuff))
+                conn.sendall(thatstuff)
             if not isServer:
-                bls = ''
-                conn.sendall(bytes(str(int(x))+","+str(int(y))+"-"+json.dumps(bulletlist),'utf-8'))
-                data = ''
-                data = conn.recv(2048)
+                thatstuff=bytes(str(int(x))+","+str(int(y))+"-"+json.dumps(bulletlist),'utf-8')
+                conn.sendall(len(thatstuff))
+                conn.sendall(thatstuff)
+                data = conn.recv(10)
+                bytesnext=data.decode('utf-8')
+                data = conn.recv(bytesnext)
                 opponent=data.decode('utf-8')
                 epos=readData(opponent)
                 if not opponent=="death":
