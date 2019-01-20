@@ -7,11 +7,11 @@ import time
 import pygame
 import json
 pygame.init()
-isServer = False
+isServer = True
 if isServer:
     HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
 else:
-    HOST = '192.168.0.28'  # Standard loopback interface address (localhost)
+    HOST = '192.168.0.20'  # Standard loopback interface address (localhost)
 PORT = 65432        # Port to listen on (non-privied ports are > 1023)
 sx=800
 sy=600
@@ -128,9 +128,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             if isServer:
                 data = ''
-                data = conn.recv(10)
-                bytesnext=int(data.decode('utf-8'))
-                data = ''
+                data = conn.recv(4)
+                bytesnext=data.decode('utf-8')
+                bytesnext=bytesnext[:bytesnext.index('.')]
                 data = conn.recv(bytesnext)
                 opponent=data.decode('utf-8')
                 epos=readData(opponent)
@@ -138,16 +138,24 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 if not opponent=="death":
                     pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
 
-                conn.sendall(len(thatstuff))
+                lenString = str(len(thatstuff))
+                for i in range(4-len(lenString)):
+                    lenString+="."
+                conn.sendall(lenString)
                 conn.sendall(thatstuff)
             if not isServer:
                 thatstuff=bytes(str(int(x))+","+str(int(y))+"-"+json.dumps(bulletlist),'utf-8')
-                conn.sendall(len(thatstuff))
+                lenString = str(len(thatstuff))
+                for i in range(4-len(lenString)):
+                    lenString+="."
+                conn.sendall(lenString)
                 conn.sendall(thatstuff)
-                data = conn.recv(10)
+                data = conn.recv(4)
                 bytesnext=data.decode('utf-8')
+                bytesnext=bytesnext[:bytesnext.index('.')]
                 data = conn.recv(bytesnext)
                 opponent=data.decode('utf-8')
+                
                 epos=readData(opponent)
                 if not opponent=="death":
                     pygame.draw.rect(screen,(0,0,255),pygame.Rect(epos[0],epos[1],40,40))
