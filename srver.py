@@ -49,24 +49,40 @@ ey=0
 nb = []
 #functions
 def networkSystem():
+	global ebulletlist
+	global ex
+	global ey
+	global acpu
 	global conn
+	global done
 	while True:
-		print('in loop')
 		if isServer:
-			print('in if statement')
 			data = ''
 			data = conn.recv(4)
 			bytesnext=data.decode('utf-8')
-			print('recieved data')
-			print(bytesnext)
+			print('getting length', bytesnext)
 			if '.' in bytesnext:
 				bytesnext=int(bytesnext[:bytesnext.index('.')])
 			else:
 				bytesnext = int(bytesnext)
 			data = conn.recv(int(bytesnext))
 			opponent=data.decode('utf-8')
-			epos=readData(opponent)
-			print('networking')
+			if not opponent=="death":
+				print(opponent)
+				ox=int(opponent[:opponent.find(",")])
+				oy=int(opponent[(opponent.find(",")+1):(opponent.find("?"))])
+				ebl=opponent[(opponent.find("?")+1):(opponent.find("|"))]
+				eacpu=opponent[(opponent.find("|")) + 1:]
+				if not isServer:
+					acpu = eval(eacpu)
+				ebl=json.loads(ebl)
+				for i in range(len(ebl)):
+				   ebl[i]=tuple(ebl[i])
+				   ebulletlist.append(ebl[i])
+				ex=ox
+				ey=oy
+				epos = (ex, ey)
+
 			if not opponent=="death":
 				print('networking')
 				screen.blit(redTank_image,(epos[0],epos[1]))
@@ -84,35 +100,29 @@ def networkSystem():
 			data = conn.recv(bytesnext)
 			opponent=data.decode('utf-8')
 
-			epos=readData(opponent)
+			if not opponent=="death":
+				print(opponent)
+				ox=int(opponent[:opponent.find(",")])
+				oy=int(opponent[(opponent.find(",")+1):(opponent.find("?"))])
+				ebl=opponent[(opponent.find("?")+1):(opponent.find("|"))]
+				eacpu=opponent[(opponent.find("|")) + 1:]
+				if not isServer:
+					acpu = eval(eacpu)
+				ebl=json.loads(ebl)
+				for i in range(len(ebl)):
+				   ebl[i]=tuple(ebl[i])
+				   ebulletlist.append(ebl[i])
+				ex=ox
+				ey=oy
+			epos = (ex, ey)
+
 			print('networking')
 			if not opponent=="death":
 				print('networking')
 				screen.blit(redTank_image,(epos[0],epos[1]))
 
 def readData(opponent):
-	global done
-	if opponent=="death":
-		done=True
-		return
-	global ebulletlist
-	global ex
-	global ey
-	global acpu
-	print(opponent)
-	ox=int(opponent[:opponent.find(",")])
-	oy=int(opponent[(opponent.find(",")+1):(opponent.find("?"))])
-	ebl=opponent[(opponent.find("?")+1):(opponent.find("|"))]
-	eacpu=opponent[(opponent.find("|")) + 1:]
-	if not isServer:
-		acpu = eval(eacpu)
-	ebl=json.loads(ebl)
-	for i in range(len(ebl)):
-	   ebl[i]=tuple(ebl[i])
-	   ebulletlist.append(ebl[i])
-	ex=ox
-	ey=oy
-	print(len(ebulletlist))
+
 	return (ox,oy)
 def sendData():
 	thatstuff=bytes(str(int(x))+","+str(int(y))+"?"+json.dumps(nb)+'|'+json.dumps(acpu),'utf-8')
@@ -251,7 +261,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 					done=True
 			if pressed[pygame.K_SPACE]:
 
-
 				done=False
 				health=5
 				bulletlist=[]
@@ -263,4 +272,3 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 				else:
 					x=760
 					y=560
-		print("great")
