@@ -72,23 +72,23 @@ def networkSystem():
 				screen.blit(redTank_image,(epos[0],epos[1]))
 			sendData()
 
-			if not isServer:
-				sendData()
-				data = conn.recv(4)
-				bytesnext=data.decode('utf-8')
-				print('recieved:' + bytesnext)
-				if '.' in bytesnext:
-					bytesnext=int(bytesnext[:bytesnext.index('.')])
-				else:
-					bytesnext = int(bytesnext)
-				data = conn.recv(bytesnext)
-				opponent=data.decode('utf-8')
+		if not isServer:
+			sendData()
+			data = conn.recv(4)
+			bytesnext=data.decode('utf-8')
+			print('recieved:' + bytesnext)
+			if '.' in bytesnext:
+				bytesnext=int(bytesnext[:bytesnext.index('.')])
+			else:
+				bytesnext = int(bytesnext)
+			data = conn.recv(bytesnext)
+			opponent=data.decode('utf-8')
 
-				epos=readData(opponent)
+			epos=readData(opponent)
+			print('networking')
+			if not opponent=="death":
 				print('networking')
-				if not opponent=="death":
-					print('networking')
-					screen.blit(redTank_image,(epos[0],epos[1]))
+				screen.blit(redTank_image,(epos[0],epos[1]))
 
 def readData(opponent):
 	global done
