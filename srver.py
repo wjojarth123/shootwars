@@ -7,6 +7,7 @@ import time
 import pygame
 import json
 import random
+import _thread
 #Defining images
 grass_image=pygame.image.load("grass.png")
 greenTank_image=pygame.image.load("tankGreen_outline.png")
@@ -47,6 +48,48 @@ bs=10
 ey=0
 nb = []
 #functions
+def networkSystem():
+	global conn
+	while True:
+		print('in loop')
+		if isServer:
+			print('in if statement')
+			data = ''
+			data = conn.recv(4)
+			bytesnext=data.decode('utf-8')
+			print('recieved data')
+			print(bytesnext)
+			if '.' in bytesnext:
+				bytesnext=int(bytesnext[:bytesnext.index('.')])
+			else:
+				bytesnext = int(bytesnext)
+			data = conn.recv(int(bytesnext))
+			opponent=data.decode('utf-8')
+			epos=readData(opponent)
+			print('networking')
+			if not opponent=="death":
+				print('networking')
+				screen.blit(redTank_image,(epos[0],epos[1]))
+			sendData()
+
+			if not isServer:
+				sendData()
+				data = conn.recv(4)
+				bytesnext=data.decode('utf-8')
+				print('recieved:' + bytesnext)
+				if '.' in bytesnext:
+					bytesnext=int(bytesnext[:bytesnext.index('.')])
+				else:
+					bytesnext = int(bytesnext)
+				data = conn.recv(bytesnext)
+				opponent=data.decode('utf-8')
+
+				epos=readData(opponent)
+				print('networking')
+				if not opponent=="death":
+					print('networking')
+					screen.blit(redTank_image,(epos[0],epos[1]))
+
 def readData(opponent):
 	global done
 	if opponent=="death":
@@ -95,7 +138,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 	print('Finished initializing socket')
 	while True:
 		if not done:
-                          #rediefining variables
+			  #rediefining variables
 			nb = []
 			hasShot=0
 			currenttime=time.time()
@@ -144,13 +187,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 			ebtr=[]
 			for i in range(len(ebulletlist)):
 				screen.blit(bullet_image,(ebulletlist[i][0],ebulletlist[i][1]))
-				
+
 				ebulletlist[i]=(ebulletlist[i][0]+ebulletlist[i][2],ebulletlist[i][1]+ebulletlist[i][3],ebulletlist[i][2],ebulletlist[i][3])
 				bulletrect=pygame.Rect(ebulletlist[i][0],ebulletlist[i][1],10,10)
 				if usrect.colliderect(bulletrect):
 					health-=1
 					ebtr.append(i)
-			
+
 			for i in range(len(ebtr)):
 				ebulletlist.pop(ebtr[i])
 			if health<=0:
@@ -165,48 +208,24 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 			acpu=[x for x in acpu if not usrect.colliderect(pygame.Rect(x[0],x[1],10,10))]
 			acpu=[x for x in acpu if not oprect.colliderect(pygame.Rect(x[0],x[1],10,10))]
 			pressed=pygame.key.get_pressed()
-
+			angle=0
 			if pressed[pygame.K_UP] and y>0:
 				y-=playerSpeed*timePassed
+				angle=180
 			if pressed[pygame.K_DOWN] and y<560:
 				y+=playerSpeed*timePassed
 			if pressed[pygame.K_LEFT] and x>0:
 				x-=playerSpeed*timePassed
+				angle=-90
 			if pressed[pygame.K_RIGHT] and x<760:
 				x+=playerSpeed*timePassed
-			screen.blit(greenTank_image,(x,y))
+				angle=90
 
-			if isServer:
-				data = ''
-				data = conn.recv(4)
-				bytesnext=data.decode('utf-8')
-				print(bytesnext)
-				if '.' in bytesnext:
-					bytesnext=int(bytesnext[:bytesnext.index('.')])
-				else:
-					bytesnext = int(bytesnext)
-				data = conn.recv(int(bytesnext))
-				opponent=data.decode('utf-8')
-				epos=readData(opponent)
-				if not opponent=="death":
-					screen.blit(redTank_image,(epos[0],epos[1]))
-				sendData()
+			_thread.start_new_thread(networkSystem, ())
+			# networkSystem()
+			greenTank_rotated=pygame.transform.rotate(greenTank_image, angle)
+			screen.blit(greenTank_rotated,(x,y))
 
-			if not isServer:
-				sendData()
-				data = conn.recv(4)
-				bytesnext=data.decode('utf-8')
-				print('recieved:' + bytesnext)
-				if '.' in bytesnext:
-					bytesnext=int(bytesnext[:bytesnext.index('.')])
-				else:
-					bytesnext = int(bytesnext)
-				data = conn.recv(bytesnext)
-				opponent=data.decode('utf-8')
-
-				epos=readData(opponent)
-				if not opponent=="death":
-					screen.blit(redTank_image,(epos[0],epos[1]))
 			textsurface=myfont.render('Health: '+str(health),False,(255,255,255))
 			screen.blit(textsurface,(5,5))
 			textsurface=myfont.render('Ammo!!: '+str(ammo),False,(255,255,255))
