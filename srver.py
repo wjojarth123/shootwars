@@ -8,19 +8,20 @@ import pygame
 import json
 import random
 import _thread
+import pdb
 #Defining images
 grass_image=pygame.image.load("grass.png")
 greenTank_image=pygame.image.load("tankGreen_outline.png")
 redTank_image=pygame.image.load("tankRed_outline.png")
 bullet_image=pygame.image.load("bullet.png")
 pygame.init()
-isServer = True
+isServer = False
 #ports
 if isServer:
 	HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
 else:
 	HOST = '192.168.0.20'  # Standard loopback interface address (localhost)
-PORT = 65432        # Port to listen on (non-privied ports are > 1023)
+PORT = 65432			   # Port to listen on (non-privileged ports are > 1023)
 sx=800
 sy=600
 screen=pygame.display.set_mode((sx,sy))
@@ -65,27 +66,11 @@ def networkSystem():
 				bytesnext=int(bytesnext[:bytesnext.index('.')])
 			else:
 				bytesnext = int(bytesnext)
-			data = conn.recv(int(bytesnext))
-			opponent=data.decode('utf-8')
-			if not opponent=="death":
-				print(opponent)
-				ox=int(opponent[:opponent.find(",")])
-				oy=int(opponent[(opponent.find(",")+1):(opponent.find("?"))])
-				ebl=opponent[(opponent.find("?")+1):(opponent.find("|"))]
-				eacpu=opponent[(opponent.find("|")) + 1:]
-				if not isServer:
-					acpu = eval(eacpu)
-				ebl=json.loads(ebl)
-				for i in range(len(ebl)):
-				   ebl[i]=tuple(ebl[i])
-				   ebulletlist.append(ebl[i])
-				ex=ox
-				ey=oy
-				epos = (ex, ey)
+			ox, oy = readData(bytesnext)
+			ex=ox
+			ey=oy
+			epos = (ex, ey)
 
-			if not opponent=="death":
-				print('networking')
-				screen.blit(redTank_image,(epos[0],epos[1]))
 			sendData()
 
 		if not isServer:
@@ -97,32 +82,26 @@ def networkSystem():
 				bytesnext=int(bytesnext[:bytesnext.index('.')])
 			else:
 				bytesnext = int(bytesnext)
-			data = conn.recv(bytesnext)
-			opponent=data.decode('utf-8')
-
-			if not opponent=="death":
-				print(opponent)
-				ox=int(opponent[:opponent.find(",")])
-				oy=int(opponent[(opponent.find(",")+1):(opponent.find("?"))])
-				ebl=opponent[(opponent.find("?")+1):(opponent.find("|"))]
-				eacpu=opponent[(opponent.find("|")) + 1:]
-				if not isServer:
-					acpu = eval(eacpu)
-				ebl=json.loads(ebl)
-				for i in range(len(ebl)):
-				   ebl[i]=tuple(ebl[i])
-				   ebulletlist.append(ebl[i])
-				ex=ox
-				ey=oy
+			ox, oy = readData(bytesnext)
+			ex=ox
+			ey=oy
 			epos = (ex, ey)
 
-			print('networking')
-			if not opponent=="death":
-				print('networking')
-				screen.blit(redTank_image,(epos[0],epos[1]))
-
 def readData(opponent):
-
+	data = conn.recv(int(opponent))
+	opponent=data.decode('utf-8')
+	if not opponent=="death":
+		print(opponent)
+		ox=int(opponent[:opponent.find(",")])
+		oy=int(opponent[(opponent.find(",")+1):(opponent.find("?"))])
+		ebl=opponent[(opponent.find("?")+1):(opponent.find("|"))]
+		eacpu=opponent[(opponent.find("|")) + 1:]
+		if not isServer:
+			acpu = eval(eacpu)
+		ebl=json.loads(ebl)
+		for i in range(len(ebl)):
+		   ebl[i]=tuple(ebl[i])
+		   ebulletlist.append(ebl[i])
 	return (ox,oy)
 def sendData():
 	thatstuff=bytes(str(int(x))+","+str(int(y))+"?"+json.dumps(nb)+'|'+json.dumps(acpu),'utf-8')
@@ -146,6 +125,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 		conn = s
 	print(PORT,conn)
 	print('Finished initializing socket')
+	_thread.start_new_thread(networkSystem, ())
+
 	while True:
 		if not done:
 			  #rediefining variables
@@ -231,8 +212,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 				x+=playerSpeed*timePassed
 				angle=90
 
-			_thread.start_new_thread(networkSystem, ())
 			# networkSystem()
+
+			screen.blit(redTank_image,(ex,ey))
+
 			greenTank_rotated=pygame.transform.rotate(greenTank_image, angle)
 			screen.blit(greenTank_rotated,(x,y))
 
