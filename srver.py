@@ -15,7 +15,7 @@ greenTank_image=pygame.image.load("tankGreen_outline.png")
 redTank_image=pygame.image.load("tankRed_outline.png")
 bullet_image=pygame.image.load("bullet.png")
 pygame.init()
-isServer = False
+isServer = True
 #ports
 if isServer:
 	HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
@@ -184,7 +184,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 				if usrect.colliderect(bulletrect):
 					health-=1
 					ebtr.append(i)
-
+			print(ebtr)
 			for i in range(len(ebtr)):
 				ebulletlist.pop(ebtr[i])
 			if health<=0:
