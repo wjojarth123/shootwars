@@ -104,12 +104,14 @@ def readData(opponent):
 		   ebulletlist.append(ebl[i])
 	return (ox,oy)
 def sendData():
+	global nb
 	thatstuff=bytes(str(int(x))+","+str(int(y))+"?"+json.dumps(nb)+'|'+json.dumps(acpu),'utf-8')
 	lenString = str(len(thatstuff))
 	for i in range(4-len(lenString)):
 		lenString+="."
 	conn.sendall(bytes(lenString, 'utf-8'))
 	conn.sendall(thatstuff)
+	nb = []
 #socket connections
 print('initializing socket')
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -130,7 +132,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 	while True:
 		if not done:
 			  #rediefining variables
-			nb = []
+
 			hasShot=0
 			currenttime=time.time()
 			timePassed=(currenttime-lasttime)
