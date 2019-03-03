@@ -103,13 +103,15 @@ def readData(bytes):
 		for i in range(len(ebl)):
 		   ebl[i]=tuple(ebl[i])
 		   ebulletlist.append(ebl[i])
+	else:
+		winvar=True
 	return (ox,oy)
 def sendData():
 	global nb
 	if not done:
 		thatstuff=bytes(str(int(x))+","+str(int(y))+"?"+json.dumps(nb)+'|'+json.dumps(acpu),'utf-8')
 	else:
-		thatstuff="death"
+		thatstuff=bytes("death",'utf-8')
 	lenString = str(len(thatstuff))
 	for i in range(4-len(lenString)):
 		lenString+="."
@@ -226,7 +228,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
 			greenTank_rotated=pygame.transform.rotate(greenTank_image, angle)
 			screen.blit(greenTank_rotated,(x,y))
-
+			if  winvar:
+				textsurface=myfont.render("YOU WON!😀",False,(255,255,255))
+				screen.blit(textsurface,(400,300))
 			textsurface=myfont.render('Health: '+str(health),False,(255,255,255))
 			screen.blit(textsurface,(5,5))
 			textsurface=myfont.render('Ammo!!: '+str(ammo),False,(255,255,255))
