@@ -15,12 +15,12 @@ greenTank_image=pygame.image.load("tankGreen_outline.png")
 redTank_image=pygame.image.load("tankRed_outline.png")
 bullet_image=pygame.image.load("bullet.png")
 pygame.init()
-isServer = True
+isServer = False
 #ports
 if isServer:
 	HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
 else:
-	HOST = '192.168.0.20'  # Standard loopback interface address (localhost)
+	HOST = '192.168.0.15'  # Standard loopback interface address (localhost)
 PORT = 65432			   # Port to listen on (non-privileged ports are > 1023)
 sx=800
 sy=600
@@ -37,7 +37,7 @@ done=False
 playerSpeed=25
 ammo=10
 pygame.font.init()
-myfont=pygame.font.SysFont('Comic Sans MS',24)
+myfont=pygame.font.SysFont('Times New Roman',24)
 bulletlist=[]
 ebulletlist=[]
 cooldown=1
@@ -61,7 +61,7 @@ def networkSystem():
 			data = ''
 			data = conn.recv(4)
 			bytesnext=data.decode('utf-8')
-			print('getting length', bytesnext)
+			# print('getting length', bytesnext)
 			if '.' in bytesnext:
 				bytesnext=int(bytesnext[:bytesnext.index('.')])
 			else:
@@ -77,7 +77,7 @@ def networkSystem():
 			sendData()
 			data = conn.recv(4)
 			bytesnext=data.decode('utf-8')
-			print('recieved:' + bytesnext)
+			# print('recieved:' + bytesnext)
 			if '.' in bytesnext:
 				bytesnext=int(bytesnext[:bytesnext.index('.')])
 			else:
@@ -87,11 +87,12 @@ def networkSystem():
 			ey=oy
 			epos = (ex, ey)
 
-def readData(opponent):
-	data = conn.recv(int(opponent))
+def readData(bytes):
+	global acpu
+	data = conn.recv(int(bytes))
 	opponent=data.decode('utf-8')
 	if not opponent=="death":
-		print(opponent)
+		# print(opponent)
 		ox=int(opponent[:opponent.find(",")])
 		oy=int(opponent[(opponent.find(",")+1):(opponent.find("?"))])
 		ebl=opponent[(opponent.find("?")+1):(opponent.find("|"))]
@@ -105,14 +106,18 @@ def readData(opponent):
 	return (ox,oy)
 def sendData():
 	global nb
-	thatstuff=bytes(str(int(x))+","+str(int(y))+"?"+json.dumps(nb)+'|'+json.dumps(acpu),'utf-8')
+	if not done:
+		thatstuff=bytes(str(int(x))+","+str(int(y))+"?"+json.dumps(nb)+'|'+json.dumps(acpu),'utf-8')
+	else:
+		thatstuff="death"
 	lenString = str(len(thatstuff))
 	for i in range(4-len(lenString)):
 		lenString+="."
 	conn.sendall(bytes(lenString, 'utf-8'))
 	conn.sendall(thatstuff)
+	# print("hi",thatstuff,"we need a run button in Atom ")
 	nb = []
-#socket connections
+#socket connectionsa
 print('initializing socket')
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 	s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -153,7 +158,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 					bs=(100*timePassed)
 					vy = yd/dist*bs
 					vx = xd/dist*bs
-
+					print('adding a bullet')
 					bulletlist.append((x,y,vx,vy))
 					nb.append((x,y,vx,vy))
 					cooldown=0.5
@@ -191,10 +196,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 				ebulletlist.pop(ebtr[i])
 			if health<=0:
 				done=True
-
+			print(len(acpu))
 			for i in range(len(acpu)):
 				rect = pygame.Rect(acpu[i][0],acpu[i][1],10,10)
 				pygame.draw.rect(screen,(0,255,0),rect)
+
 				if usrect.colliderect(rect):
 					ammo += acpu[i][2]
 			oprect=pygame.Rect(ex,ey,40,40)
@@ -229,18 +235,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
 		if done:
 			pressed=pygame.key.get_pressed()
-
-			if isServer:
-				data = conn.recv(1024)
-				opponent=data.decode('utf-8')
-				epos=readData(opponent)
-
-				conn.sendall(bytes("5...death",'utf-8'))
-			else:
-				conn.sendall(bytes("5...death",'utf-8'))
-				data = conn.recv(1024)
-				opponent=data.decode('utf-8')
-				epos=readData(opponent)
 			for event in pygame.event.get():
 				if event.type==pygame.QUIT:
 					done=True
