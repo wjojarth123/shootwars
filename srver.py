@@ -36,6 +36,7 @@ else:
 done=False
 playerSpeed=25
 ammo=10
+winvar=False
 pygame.font.init()
 myfont=pygame.font.SysFont('Times New Roman',24)
 bulletlist=[]
@@ -47,6 +48,8 @@ acpu = []
 ex=0
 bs=10
 ey=0
+opr=False
+waeet=False
 nb = []
 #functions
 def networkSystem():
@@ -88,9 +91,13 @@ def networkSystem():
 			epos = (ex, ey)
 
 def readData(bytes):
+
 	global acpu
+	global winvar
 	data = conn.recv(int(bytes))
 	opponent=data.decode('utf-8')
+	if opponent== "resetting":
+		opr=True
 	if not opponent=="death":
 		# print(opponent)
 		ox=int(opponent[:opponent.find(",")])
@@ -105,13 +112,18 @@ def readData(bytes):
 		   ebulletlist.append(ebl[i])
 	else:
 		winvar=True
+		print("yay, I won and my opponent lost. he looks live this")
 	return (ox,oy)
+
 def sendData():
 	global nb
 	if not done:
 		thatstuff=bytes(str(int(x))+","+str(int(y))+"?"+json.dumps(nb)+'|'+json.dumps(acpu),'utf-8')
 	else:
-		thatstuff=bytes("death",'utf-8')
+		if waeet:
+			thatstuff=bytes("resetting",'utf-8')
+		else:
+			thatstuff=bytes("death",'utf-8')
 	lenString = str(len(thatstuff))
 	for i in range(4-len(lenString)):
 		lenString+="."
@@ -229,7 +241,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 			greenTank_rotated=pygame.transform.rotate(greenTank_image, angle)
 			screen.blit(greenTank_rotated,(x,y))
 			if  winvar:
-				textsurface=myfont.render("YOU WON!😀",False,(255,255,255))
+				done=True
+				textsurface=myfont.render("YOU WON!",False,(255,255,255))
 				screen.blit(textsurface,(400,300))
 			textsurface=myfont.render('Health: '+str(health),False,(255,255,255))
 			screen.blit(textsurface,(5,5))
@@ -239,19 +252,20 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
 		if done:
 			pressed=pygame.key.get_pressed()
-			for event in pygame.event.get():
+			for event in pygame.event.get ():
 				if event.type==pygame.QUIT:
 					done=True
 			if pressed[pygame.K_SPACE]:
-
-				done=False
-				health=5
-				bulletlist=[]
-				ebulletlist=[]
-				if isServer:
-					x=0
-
-					y=0
-				else:
-					x=760
-					y=560
+				waeet=True
+				if opr:
+					winvar=False
+					done=False
+					health=5
+					bulletlist=[]
+					ebulletlist=[]
+					if isServer:
+						x=0
+						y=0
+					else:
+						x=760
+						y=560
