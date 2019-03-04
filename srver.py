@@ -60,6 +60,7 @@ def networkSystem():
 	global conn
 	global done
 	while True:
+		print('looping network system')
 		if isServer:
 			data = ''
 			data = conn.recv(4)
@@ -110,18 +111,21 @@ def readData(bytes):
 		for i in range(len(ebl)):
 		   ebl[i]=tuple(ebl[i])
 		   ebulletlist.append(ebl[i])
+		return (ox,oy)
 	else:
 		winvar=True
 		print("yay, I won and my opponent lost. he looks live this")
-	return (ox,oy)
+	return (ex,ey)
 
 def sendData():
+	print("hhhhhgggggggfffffdddddsssssaaaaaoppppo")
 	global nb
 	if not done:
 		thatstuff=bytes(str(int(x))+","+str(int(y))+"?"+json.dumps(nb)+'|'+json.dumps(acpu),'utf-8')
 	else:
 		if waeet:
 			thatstuff=bytes("resetting",'utf-8')
+			print('sending reset message')
 		else:
 			thatstuff=bytes("death",'utf-8')
 	lenString = str(len(thatstuff))
@@ -256,6 +260,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 				if event.type==pygame.QUIT:
 					done=True
 			if pressed[pygame.K_SPACE]:
+				print('trying to reset')
 				waeet=True
 				if opr:
 					winvar=False
